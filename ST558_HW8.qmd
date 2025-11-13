@@ -1,0 +1,448 @@
+---
+title: "ST558_HW8"
+format: html
+editor: visual
+---
+
+## Homework 8
+
+Ella Gruchacz
+
+EDA and Modeling of Bike Rental Data
+
+```{r}
+library(tidyverse)
+```
+
+Read in the bike data.
+
+```{r}
+bike <- read.csv("SeoulBikeData.csv")
+```
+
+# EDA
+
+Check for missingness in the data
+
+```{r}
+colSums(is.na(bike))
+```
+
+No missing data!
+
+Here we will investigate the columns of the data by looking at column types, checking the summary statistics for the numeric columns and checking the unique values for the categorical variables.
+
+```{r}
+str(bike)
+```
+
+```{r}
+psych::describe(bike)
+```
+
+```{r}
+unique(bike$Seasons)
+unique(bike$Holiday)
+unique(bike$Functioning.Day)
+```
+
+Here we will manipulate the data so that it is easier to work with.
+
+```{r}
+bike <- bike |>
+  mutate(Date = lubridate::dmy(Date), #convert Date column to date type
+         Seasons = as.factor(Seasons), # convert character variables to factors
+         Holiday = as.factor(Holiday),
+         Functioning.Day = as.factor(Functioning.Day) 
+         ) |>
+  rename("date" = "Date", #rename all variables 
+         "bike_count" = "Rented.Bike.Count",
+         "hour" = "Hour",
+         "temperature" = "Temperature.C.",
+         "humidity" = "Humidity...",
+         "wind_speed" = "Wind.speed..m.s.",
+         "visibility" = "Visibility..10m.",
+         "dew_point_temp" = "Dew.point.temperature.C.",
+         "solar_radiation" = "Solar.Radiation..MJ.m2.",
+         "rainfall" = "Rainfall.mm.",
+         "snowfall" = "Snowfall..cm.",
+         "seasons" = "Seasons",
+         "holiday" = "Holiday",
+         "functioning_day" = "Functioning.Day")
+```
+
+To start our analysis we will create some summary statistics, many of which will relate to bike rental count as we want to explore how bike rental count is effected by the other variables.
+
+```{r}
+bike |> 
+  summarize(mean_bike_rent = mean(bike_count), 
+            med_bike_rent = median(bike_count))
+```
+
+There is a mean os 704.6 bike rental count per hour.
+
+Contingency Tables
+
+Counts per season
+
+```{r}
+table(bike$seasons)
+```
+
+Counts (per day) per Holiday
+
+```{r}
+table(bike$holiday)/24
+```
+
+Two way contingency table of Seasons and Holidays (per day)
+
+```{r}
+table(bike$seasons, bike$holiday)/24
+
+```
+
+Mean number of bikes rented per hour
+
+```{r}
+bike |>
+  group_by(hour)|>
+  summarize(mean_rented = mean(bike_count))
+```
+
+Notice highest mean bike rental occuring at hour 8 in the morning and 18 in the afternoon. Generally, there are higher means in the afternoon compared to the morning.
+
+Smoothed Conditional Mean graph of number of bikes rented across each hour. Displays information on demand of bike rentals across a day.
+
+```{r}
+g <- ggplot(data = bike, aes(x = hour, y = bike_count))
+g + geom_smooth() +
+  labs(x = "Hour", y = "Number of Bikes Rented",
+  title = "Number of Bikes Rented Across Each Hour") +
+  scale_x_continuous(breaks = seq(0, 23, 1))
+```
+
+Mean number of bikes rented by seasons
+
+```{r}
+bike |>
+  group_by(seasons)|>
+  summarize(mean_rented = mean(bike_count))
+```
+
+Notice highest mean bike rentals in summer and lowest mean bike rentals in winter.
+
+Mean number of bikes rented by holiday
+
+```{r}
+bike |>
+  group_by(holiday)|>
+  summarize(mean_rented = mean(bike_count))
+```
+
+Notice significant decrease in mean bike rentals on non holiday days.
+
+Mean number of bikes rented by functioning day
+
+```{r}
+bike |>
+  group_by(functioning_day)|>
+  summarize(mean_rented = mean(bike_count))
+```
+
+Notice there are no bike rentals on non functioning days.
+
+Explore relationships between numeric variables
+
+```{r}
+g <- ggplot(data = bike, aes(x = wind_speed, y = bike_count))
+g + geom_jitter() +
+  labs(x = "Wind Speed", y = "Number of Bikes Rented",
+  title = "Number of Bikes Rented v.s Wind Speed")
+```
+
+```{r}
+g <- ggplot(data = bike, aes(x = temperature, y = bike_count))
+g + geom_jitter() +
+  labs(x = "Temperature", y = "Number of Bikes Rented",
+  title = "Number of Bikes Rented v.s Temperature")
+```
+
+```{r}
+g <- ggplot(data = bike, aes(x = temperature, y = bike_count))
+g + geom_jitter() +
+  facet_wrap(~ seasons)+
+  labs(x = "Temperature", y = "Number of Bikes Rented",
+  title = "Number of Bikes Rented v.s Temperature")
+```
+
+Spring and autumn have very similar density of bike rental bike and we can see how ridership rises with temperature. We can also see how drastic the difference in ridership between summer and winter.
+
+To simplify the analysis, we manipulate the data we subset the data based on functioning, summarize the data so there is one unique value per day.
+
+```{r}
+bike_day <- bike |>
+  filter(functioning_day == "Yes") |>
+  group_by(date, seasons, holiday) |>
+  summarise(bike_count = sum(bike_count),
+            temp = mean(temperature),
+            humidity = mean(humidity),
+            wind_speed = mean(wind_speed),
+            visibility = mean(visibility),
+            dew_point_temp = mean(dew_point_temp),
+            solar_radiation = mean(solar_radiation),
+            rainfall = sum(rainfall),
+            snowfall = sum(snowfall)
+           ) |>
+  ungroup()
+ 
+bike_day 
+```
+
+We can now see our new summarized data and we will explore the relationships to bike rental count per day.
+
+```{r}
+bike_day |> 
+  summarize(mean_bike_rent = mean(bike_count), 
+            med_bike_rent = median(bike_count))
+```
+
+The bike rental counts are now in the 10,000 range rather than the 100s.
+
+Data set of mean number of bikes rented by seasons
+
+```{r}
+bike_day |>
+  group_by(seasons)|>
+  summarize(mean_rented = mean(bike_count))
+```
+
+Notice highest mean bike rentals in summer and lowest mean bike rentals in winter.
+
+Data set of mean number of bikes rented by holiday
+
+```{r}
+bike_day |>
+  group_by(holiday)|>
+  summarize(mean_rented = mean(bike_count))
+```
+
+Notice significant decrease in mean bike rentals on non holiday days.
+
+Explore relationships between numeric variables
+
+```{r}
+g <- ggplot(data = bike_day, aes(x = wind_speed, y = bike_count))
+g + geom_jitter() +
+  labs(x = "Wind Speed", y = "Number of Bikes Rented",
+  title = "Number of Bikes Rented v.s Wind Speed")
+```
+
+```{r}
+g <- ggplot(data = bike_day, aes(x = temp, y = bike_count))
+g + geom_jitter() +
+  labs(x = "Temperature", y = "Number of Bikes Rented",
+  title = "Number of Bikes Rented v.s Temperature")
+```
+
+Relationships between variables overall stay the same just on a different scale.
+
+```{r}
+g <- ggplot(data = bike_day, aes(x = temp, y = bike_count))
+g + geom_jitter() +
+  facet_wrap(~ seasons) +
+  labs(x = "Temperature", y = "Number of Bikes Rented",
+  title = "Number of Bikes Rented v.s Temperature")
+```
+
+Correlation matrix of numeric variables
+
+```{r}
+# Loading
+library(ggcorrplot)
+corr <- cor(as.data.frame(bike_day |> select(c(bike_count, temp, humidity, wind_speed, visibility, dew_point_temp, solar_radiation, rainfall, snowfall))))
+head(corr)
+
+ggcorrplot(corr, title = "Correlation Matrix",lab = TRUE, lab_size = 2)
+```
+
+Focusing on correlation to bike count the highest correlation occurs for temperature, dew point temperature and solar radiation.
+
+# Split the data
+
+```{r}
+library(tidymodels)
+set.seed(10)
+bike_split <- initial_split(bike_day, prop = 0.75, strata = seasons) #split the training and test set 75/25
+bike_train <- training(bike_split)
+bike_test <- testing(bike_split)
+bike_train
+```
+
+Function to create CV split
+
+```{r}
+get_cv_splits <- function(data, num_folds){
+  #get fold size
+  size_fold <- floor(nrow(data)/num_folds)
+  #get random indices to subset the data with
+  random_indices <- sample(1:nrow(data), size = nrow(data), replace = FALSE)
+  #create a list to save our folds in
+  folds <- list()
+  #now cycle through our random indices vector and take the appropriate observations to each fold
+  for(i in 1:num_folds){
+    if (i < num_folds) {
+      fold_index <- seq(from = (i-1)*size_fold +1, to = i*size_fold, by = 1)
+      folds[[i]] <- data[random_indices[fold_index], ]
+    } else {
+      fold_index <- seq(from = (i-1)*size_fold +1, to = length(random_indices), by = 1)
+      folds[[i]] <- data[random_indices[fold_index], ]
+    }
+  }
+  return(folds)
+}
+
+```
+
+Create a 10 CV split on training set
+
+```{r}
+folds <- get_cv_splits(bike_train, 10)
+```
+
+1st Recipe
+
+```{r}
+first_rec <- 
+   recipe(bike_count ~ ., data = bike_train) |> 
+  update_role(date, new_role = "ID") |> 
+  step_date(date, features = "dow" )  |> 
+  step_mutate(weekday_end = factor(ifelse(date_dow == "Sun" |
+                                       date_dow == "Sat",
+                                     "Weekend", "Weekday"))) |>
+  step_rm(date_dow) |>
+  step_dummy(seasons, holiday, weekday_end) |> 
+  step_normalize(all_numeric(), -all_outcomes()) 
+
+first_rec |>
+  prep(training = bike_train) |>
+  bake(bike_train)
+```
+
+2nd Recipe
+
+```{r}
+sec_rec <- 
+  recipe(bike_count ~ ., data = bike_train) |> 
+  update_role(date, new_role = "ID") |> 
+  step_date(date, features = "dow" )  |> 
+  step_mutate(weekday_end = factor(ifelse(date_dow == "Sun" |
+                                       date_dow == "Sat",
+                                     "Weekend", "Weekday"))) |>
+  step_rm(date_dow) |>
+  step_dummy(seasons, holiday, weekday_end) |> 
+  step_normalize(all_numeric(), -all_outcomes())  |>
+  step_interact(terms = ~ holiday_No.Holiday:starts_with("seasons")) |>
+  step_interact(terms = ~ starts_with("seasons"):temp) |>
+  step_interact(terms = ~ temp:rainfall) 
+
+sec_rec |>
+  prep(training = bike_train) |>
+  bake(bike_train)
+```
+
+Third Recipe
+
+```{r}
+third_rec <- 
+  recipe(bike_count ~ ., data = bike_train) |> 
+  update_role(date, new_role = "ID") |> 
+  step_date(date, features = "dow" )  |> 
+  step_mutate(weekday_end = factor(ifelse(date_dow == "Sun" |
+                                       date_dow == "Sat",
+                                     "Weekend", "Weekday"))) |>
+  step_rm(date_dow) |>
+  step_dummy(seasons, holiday, weekday_end) |> 
+  step_normalize(all_numeric(), -all_outcomes())  |>
+  step_interact(terms = ~ holiday_No.Holiday:starts_with("seasons")) |>
+  step_interact(terms = ~ starts_with("seasons"):temp) |>
+  step_interact(terms = ~ temp:rainfall) |>
+  step_poly(temp, humidity, wind_speed, visibility, dew_point_temp,
+            solar_radiation, rainfall, snowfall) 
+
+third_rec |>
+  prep(training = bike_train) |>
+  bake(bike_train)
+```
+
+Set up linear model fit to use the “lm” engine.
+
+```{r}
+bike_mod <- linear_reg() |>
+  set_engine("lm")
+```
+
+Workflow of with first recipe
+
+```{r}
+bike_wfl1 <- workflow() |>
+  add_recipe(first_rec) |>
+  add_model(bike_mod)
+```
+
+```{r}
+bike_10_fold <- vfold_cv(bike_train,10)
+bike_wfl1 |> 
+  fit_resamples(bike_10_fold) |>
+  collect_metrics()
+```
+
+Workflow of with second recipe
+
+```{r}
+bike_wfl2 <- workflow() |>
+  add_recipe(sec_rec) |>
+  add_model(bike_mod)
+
+bike_wfl2 |> 
+  fit_resamples(bike_10_fold) |>
+  collect_metrics()
+```
+
+```{r}
+bike_wfl3 <- workflow() |>
+  add_recipe(third_rec) |>
+  add_model(bike_mod)
+
+bike_wfl3 |> 
+  fit_resamples(bike_10_fold) |>
+  collect_metrics()
+```
+
+According to our metric the "best" model is using the third recipe since it has the lowest RMSE.
+
+Using the third recipe, we fit the model of the entire training data set and compute the RMSE metric on the test set.
+
+```{r}
+best_fit <- bike_wfl3 |>
+  fit(bike_train)
+
+bike_wfl3 |> 
+  last_fit(bike_split) |>
+  collect_metrics()
+
+
+  
+```
+
+Finally, we obtain the final model coefficients using tidy() and extract_fit_parsnip()
+
+```{r}
+best_fit |>
+  tidy()
+```
+
+```{r}
+best_fit |>
+  extract_fit_parsnip()
+```

@@ -1,0 +1,16 @@
+[
+  {
+    "objectID": "ST558_HW8.html",
+    "href": "ST558_HW8.html",
+    "title": "ST558_HW8",
+    "section": "",
+    "text": "Ella Gruchacz\nEDA and Modeling of Bike Rental Data\n\nlibrary(tidyverse)\n\nWarning: package 'tidyverse' was built under R version 4.4.3\n\n\nWarning: package 'tidyr' was built under R version 4.4.2\n\n\nWarning: package 'purrr' was built under R version 4.4.2\n\n\nWarning: package 'dplyr' was built under R version 4.4.2\n\n\nWarning: package 'stringr' was built under R version 4.4.2\n\n\nWarning: package 'forcats' was built under R version 4.4.2\n\n\nWarning: package 'lubridate' was built under R version 4.4.3\n\n\n── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.1.4     ✔ readr     2.1.5\n✔ forcats   1.0.0     ✔ stringr   1.5.1\n✔ ggplot2   4.0.0     ✔ tibble    3.2.1\n✔ lubridate 1.9.4     ✔ tidyr     1.3.1\n✔ purrr     1.0.2     \n── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors\n\n\nRead in the bike data.\n\nbike &lt;- read.csv(\"SeoulBikeData.csv\")"
+  },
+  {
+    "objectID": "ST558_HW8.html#homework-8",
+    "href": "ST558_HW8.html#homework-8",
+    "title": "ST558_HW8",
+    "section": "",
+    "text": "Ella Gruchacz\nEDA and Modeling of Bike Rental Data\n\nlibrary(tidyverse)\n\nWarning: package 'tidyverse' was built under R version 4.4.3\n\n\nWarning: package 'tidyr' was built under R version 4.4.2\n\n\nWarning: package 'purrr' was built under R version 4.4.2\n\n\nWarning: package 'dplyr' was built under R version 4.4.2\n\n\nWarning: package 'stringr' was built under R version 4.4.2\n\n\nWarning: package 'forcats' was built under R version 4.4.2\n\n\nWarning: package 'lubridate' was built under R version 4.4.3\n\n\n── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.1.4     ✔ readr     2.1.5\n✔ forcats   1.0.0     ✔ stringr   1.5.1\n✔ ggplot2   4.0.0     ✔ tibble    3.2.1\n✔ lubridate 1.9.4     ✔ tidyr     1.3.1\n✔ purrr     1.0.2     \n── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors\n\n\nRead in the bike data.\n\nbike &lt;- read.csv(\"SeoulBikeData.csv\")"
+  }
+]
